@@ -3,25 +3,117 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Colours */
+  --color-bg: #FFFFFF;
+  --color-surface: #F7F7F7;
+  --color-surface-hover: #F0F0F0;
+  --color-border: #E4E4E4;
+  --color-border-hover: #CACACA;
+  --color-text-primary: #0A0A0A;
+  --color-text-secondary: #525252;
+  --color-text-tertiary: #A3A3A3;
+  --color-overlay: rgba(0, 0, 0, 0.4);
+  --color-nav-bg: rgba(255, 255, 255, 0.85);
+  --color-destructive: #DC2626;
+
+  /* Type scale — desktop */
+  --text-caption: 12px;
+  --text-body-sm: 14px;
+  --text-body-lg: 16px;
+  --text-h3: 20px;
+  --text-h2: 24px;
+  --text-h1: 28px;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (max-width: 640px) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --text-caption: 10px;
+    --text-body-sm: 12px;
+    --text-body-lg: 14px;
+    --text-h3: 18px;
+    --text-h2: 20px;
+    --text-h1: 24px;
   }
+}
+
+/* Shadows */
+.shadow-float {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+}
+
+.shadow-card-hover {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* Shimmer animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface) 25%,
+    var(--color-border) 50%,
+    var(--color-surface) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Toast slide-in */
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast-enter {
+  animation: slide-in-right 0.3s ease-out;
+}
+
+/* Spinner */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-text-primary);
+  border-radius: 999px;
+  animation: spin 0.6s linear infinite;
+}
+
+.spinner-sm {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-text-primary);
+  border-radius: 999px;
+  animation: spin 0.6s linear infinite;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  margin: 0;
+  min-height: 100vh;
 }
