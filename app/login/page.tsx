@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { signInWithGoogle, getRedirectResult } from "@/lib/auth";
 import { auth } from "@/lib/firebase";
@@ -32,7 +31,6 @@ function GoogleIcon() {
 
 export default function LoginPage() {
   const { user, loading } = useAuth();
-  const router = useRouter();
   const { showToast } = useToastContext();
   const [checkingRedirect, setCheckingRedirect] = useState(true);
   const hasRedirected = useRef(false);
