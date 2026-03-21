@@ -56,21 +56,22 @@ export default function BookmarkCard({
         position: "relative",
       }}
     >
-      {/* Project assignment button — visible on hover */}
-      {hovered && (
-        <div
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowProjectDropdown(!showProjectDropdown);
-          }}
-          style={{
-            position: "absolute",
-            top: 8,
-            left: 8,
-            maxWidth: "50%",
-            zIndex: 2,
-          }}
-        >
+      {/* Project assignment button — always visible on mobile, hover-only on desktop */}
+      <div
+        className="project-assign-btn"
+        onClick={(e) => {
+          e.stopPropagation();
+          setShowProjectDropdown(!showProjectDropdown);
+        }}
+        style={{
+          position: "absolute",
+          top: 8,
+          left: 8,
+          maxWidth: "50%",
+          zIndex: 2,
+          opacity: hovered || showProjectDropdown ? 1 : undefined,
+        }}
+      >
           {!showProjectDropdown ? (
             <div
               style={{
@@ -196,7 +197,6 @@ export default function BookmarkCard({
             </div>
           )}
         </div>
-      )}
 
       {bookmark.thumbnail && (
         <div

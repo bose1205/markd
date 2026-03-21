@@ -45,6 +45,18 @@
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 
+/* Project assignment button — hidden on desktop, visible on hover */
+.project-assign-btn {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+@media (max-width: 640px) {
+  .project-assign-btn {
+    opacity: 1;
+  }
+}
+
 /* Shimmer animation */
 @keyframes shimmer {
   0% {
