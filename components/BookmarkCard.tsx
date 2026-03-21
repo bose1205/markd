@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Trash2 } from "lucide-react";
 import { Bookmark } from "@/types/bookmark";
-import DeleteConfirm from "./DeleteConfirm";
 
 interface BookmarkCardProps {
   bookmark: Bookmark;
@@ -138,16 +137,7 @@ export default function BookmarkCard({
             {formattedDate}
           </span>
 
-          {showDelete ? (
-            <DeleteConfirm
-              onConfirm={() => {
-                onDelete();
-                setShowDelete(false);
-              }}
-              onCancel={() => setShowDelete(false)}
-            />
-          ) : (
-            <button
+          <button
               onClick={(e) => {
                 e.stopPropagation();
                 setShowDelete(true);
@@ -171,7 +161,133 @@ export default function BookmarkCard({
             >
               <Trash2 size={16} />
             </button>
-          )}
+        </div>
+      </div>
+
+      {showDelete && (
+        <DeleteModal
+          onDelete={() => {
+            onDelete();
+            setShowDelete(false);
+          }}
+          onClose={() => setShowDelete(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+function DeleteModal({
+  onDelete,
+  onClose,
+}: {
+  onDelete: () => void;
+  onClose: () => void;
+}) {
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    },
+    [onClose]
+  );
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
+
+  return (
+    <div
+      onClick={(e) => {
+        e.stopPropagation();
+        onClose();
+      }}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "var(--color-overlay)",
+        backdropFilter: "blur(4px)",
+        zIndex: 50,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="shadow-float"
+        style={{
+          background: "var(--color-bg)",
+          borderRadius: 24,
+          maxWidth: 360,
+          width: "calc(100% - 32px)",
+          padding: 24,
+        }}
+      >
+        <h2
+          style={{
+            fontSize: "var(--text-h3)",
+            fontWeight: 700,
+            color: "var(--color-text-primary)",
+            margin: 0,
+          }}
+        >
+          Delete bookmark?
+        </h2>
+        <p
+          style={{
+            fontSize: "var(--text-body-sm)",
+            color: "var(--color-text-secondary)",
+            marginTop: 8,
+            marginBottom: 0,
+          }}
+        >
+          This bookmark will be permanently deleted.
+        </p>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: 12,
+            marginTop: 24,
+          }}
+        >
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "var(--color-destructive)",
+              fontSize: "var(--text-body-sm)",
+              padding: "12px 16px",
+              fontFamily: "inherit",
+            }}
+          >
+            Delete
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
+            style={{
+              background: "var(--color-surface)",
+              border: "1px solid var(--color-border)",
+              borderRadius: 16,
+              cursor: "pointer",
+              color: "var(--color-text-primary)",
+              fontSize: "var(--text-body-sm)",
+              padding: "12px 24px",
+              fontWeight: 500,
+              fontFamily: "inherit",
+            }}
+          >
+            Cancel
+          </button>
         </div>
       </div>
     </div>
