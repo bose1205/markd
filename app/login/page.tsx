@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { signInWithGoogle, getRedirectResult } from "@/lib/auth";
 import { auth } from "@/lib/firebase";
-import { useToast } from "@/hooks/useToast";
+import { useToastContext } from "@/app/ToastProvider";
 
 function GoogleIcon() {
   return (
@@ -33,7 +33,7 @@ function GoogleIcon() {
 export default function LoginPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const { showToast } = useToast();
+  const { showToast } = useToastContext();
 
   useEffect(() => {
     if (!loading && user) {
@@ -51,7 +51,8 @@ export default function LoginPage() {
       .catch((error) => {
         showToast(error.message || "Sign in failed", "error");
       });
-  }, [router, showToast]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (loading) {
     return (
@@ -104,7 +105,16 @@ export default function LoginPage() {
 
       <div style={{ marginTop: 48 }}>
         <button
-          onClick={() => signInWithGoogle()}
+          type="button"
+          onClick={async () => {
+            try {
+              await signInWithGoogle();
+            } catch (error: unknown) {
+              const message =
+                error instanceof Error ? error.message : "Sign in failed";
+              showToast(message, "error");
+            }
+          }}
           style={{
             display: "flex",
             alignItems: "center",
