@@ -3,7 +3,9 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { signInWithGoogle } from "@/lib/auth";
+import { signInWithGoogle, getRedirectResult } from "@/lib/auth";
+import { auth } from "@/lib/firebase";
+import { useToast } from "@/hooks/useToast";
 
 function GoogleIcon() {
   return (
@@ -31,12 +33,25 @@ function GoogleIcon() {
 export default function LoginPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (!loading && user) {
       router.replace("/home");
     }
   }, [user, loading, router]);
+
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result?.user) {
+          router.replace("/home");
+        }
+      })
+      .catch((error) => {
+        showToast(error.message || "Sign in failed", "error");
+      });
+  }, [router, showToast]);
 
   if (loading) {
     return (
