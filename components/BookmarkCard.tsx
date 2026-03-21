@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Trash2, FolderPlus } from "lucide-react";
+import { Trash2, FolderPlus, Check } from "lucide-react";
 import { Bookmark } from "@/types/bookmark";
 import { Project } from "@/types/project";
-import ProjectDropdown from "./ProjectDropdown";
 
 interface BookmarkCardProps {
   bookmark: Bookmark;
@@ -72,45 +71,128 @@ export default function BookmarkCard({
             zIndex: 2,
           }}
         >
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-              background: "rgba(255,255,255,0.9)",
-              border: "1px solid var(--color-border)",
-              borderRadius: 999,
-              padding: "4px 10px",
-              fontSize: "var(--text-caption)",
-              color: "var(--color-text-secondary)",
-              cursor: "pointer",
-              maxWidth: "100%",
-            }}
-          >
-            <FolderPlus size={12} style={{ flexShrink: 0 }} />
-            <span
+          {!showProjectDropdown ? (
+            <div
               style={{
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                minWidth: 0,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                background: "rgba(255,255,255,0.9)",
+                border: "1px solid var(--color-border)",
+                borderRadius: 999,
+                padding: "4px 10px",
+                fontSize: "var(--text-caption)",
+                color: "var(--color-text-secondary)",
+                cursor: "pointer",
+                maxWidth: "100%",
               }}
             >
-              {firstProjectName || "None"}
-            </span>
-          </div>
-          {showProjectDropdown && (
+              <FolderPlus size={12} style={{ flexShrink: 0 }} />
+              <span
+                style={{
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  minWidth: 0,
+                }}
+              >
+                {firstProjectName || "None"}
+              </span>
+            </div>
+          ) : (
             <div
               onClick={(e) => e.stopPropagation()}
-              style={{ marginTop: 4 }}
+              style={{
+                minWidth: 200,
+                maxHeight: 200,
+                overflowY: "auto",
+                background: "var(--color-bg)",
+                borderRadius: 16,
+                border: "1px solid var(--color-border)",
+                boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+                padding: 8,
+              }}
             >
-              <ProjectDropdown
-                projects={projects}
-                selectedIds={bookmark.projectIds || []}
-                onChange={(ids) => {
-                  onUpdateProjectIds?.(ids);
-                }}
-              />
+              {projects.length === 0 ? (
+                <div
+                  style={{
+                    padding: 16,
+                    textAlign: "center",
+                    fontSize: "var(--text-caption)",
+                    color: "var(--color-text-secondary)",
+                  }}
+                >
+                  You can create Projects to organise your bookmarks better
+                </div>
+              ) : (
+                projects.map((project) => {
+                  const selected = (bookmark.projectIds || []).includes(
+                    project.id
+                  );
+                  return (
+                    <button
+                      key={project.id}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const current = bookmark.projectIds || [];
+                        const next = selected
+                          ? current.filter((id) => id !== project.id)
+                          : [...current, project.id];
+                        onUpdateProjectIds?.(next);
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.background =
+                          "var(--color-surface-hover)")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.background = "transparent")
+                      }
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        width: "100%",
+                        padding: "8px 12px",
+                        borderRadius: 8,
+                        border: "none",
+                        background: "none",
+                        cursor: "pointer",
+                        fontSize: "var(--text-body-sm)",
+                        color: "var(--color-text-primary)",
+                        fontFamily: "inherit",
+                        textAlign: "left",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 16,
+                          height: 16,
+                          borderRadius: 4,
+                          border: selected
+                            ? "none"
+                            : "1px solid var(--color-border)",
+                          background: selected
+                            ? "var(--color-text-primary)"
+                            : "transparent",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {selected && (
+                          <Check
+                            size={12}
+                            style={{ color: "var(--color-bg)" }}
+                          />
+                        )}
+                      </div>
+                      {project.name}
+                    </button>
+                  );
+                })
+              )}
             </div>
           )}
         </div>
