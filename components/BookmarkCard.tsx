@@ -1,20 +1,27 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2, FolderPlus } from "lucide-react";
 import { Bookmark } from "@/types/bookmark";
+import { Project } from "@/types/project";
+import ProjectDropdown from "./ProjectDropdown";
 
 interface BookmarkCardProps {
   bookmark: Bookmark;
+  projects?: Project[];
   onDelete: () => void;
+  onUpdateProjectIds?: (projectIds: string[]) => void;
 }
 
 export default function BookmarkCard({
   bookmark,
+  projects = [],
   onDelete,
+  onUpdateProjectIds,
 }: BookmarkCardProps) {
   const [showDelete, setShowDelete] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const [showProjectDropdown, setShowProjectDropdown] = useState(false);
 
   const formattedDate = new Date(bookmark.createdAt).toLocaleDateString(
     "en-US",
@@ -25,10 +32,17 @@ export default function BookmarkCard({
     }
   );
 
+  const firstProjectName = projects.find((p) =>
+    bookmark.projectIds?.includes(p.id)
+  )?.name;
+
   return (
     <div
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseLeave={() => {
+        setHovered(false);
+        setShowProjectDropdown(false);
+      }}
       onClick={() => window.open(bookmark.url, "_blank", "noopener")}
       style={{
         background: hovered
@@ -40,8 +54,68 @@ export default function BookmarkCard({
         cursor: "pointer",
         transition: "background 0.15s, box-shadow 0.15s",
         boxShadow: hovered ? "0 2px 12px rgba(0,0,0,0.06)" : "none",
+        position: "relative",
       }}
     >
+      {/* Project assignment button — visible on hover */}
+      {hovered && (
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowProjectDropdown(!showProjectDropdown);
+          }}
+          style={{
+            position: "absolute",
+            top: 8,
+            left: 8,
+            maxWidth: "50%",
+            zIndex: 2,
+          }}
+        >
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+              background: "rgba(255,255,255,0.9)",
+              border: "1px solid var(--color-border)",
+              borderRadius: 999,
+              padding: "4px 10px",
+              fontSize: "var(--text-caption)",
+              color: "var(--color-text-secondary)",
+              cursor: "pointer",
+              maxWidth: "100%",
+            }}
+          >
+            <FolderPlus size={12} style={{ flexShrink: 0 }} />
+            <span
+              style={{
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                minWidth: 0,
+              }}
+            >
+              {firstProjectName || "None"}
+            </span>
+          </div>
+          {showProjectDropdown && (
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{ marginTop: 4 }}
+            >
+              <ProjectDropdown
+                projects={projects}
+                selectedIds={bookmark.projectIds || []}
+                onChange={(ids) => {
+                  onUpdateProjectIds?.(ids);
+                }}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
       {bookmark.thumbnail && (
         <div
           style={{
@@ -138,29 +212,29 @@ export default function BookmarkCard({
           </span>
 
           <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowDelete(true);
-              }}
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: 4,
-                display: "flex",
-                alignItems: "center",
-                color: "var(--color-text-tertiary)",
-                transition: "color 0.15s",
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.color = "var(--color-destructive)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.color = "var(--color-text-tertiary)")
-              }
-            >
-              <Trash2 size={16} />
-            </button>
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDelete(true);
+            }}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 4,
+              display: "flex",
+              alignItems: "center",
+              color: "var(--color-text-tertiary)",
+              transition: "color 0.15s",
+            }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.color = "var(--color-destructive)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.color = "var(--color-text-tertiary)")
+            }
+          >
+            <Trash2 size={16} />
+          </button>
         </div>
       </div>
 

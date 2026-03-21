@@ -82,6 +82,22 @@
   animation: slide-in-right 0.3s ease-out;
 }
 
+/* Create menu animation */
+@keyframes menu-enter {
+  from {
+    transform: translateX(-50%) translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+.create-menu-enter {
+  animation: menu-enter 0.18s ease-out;
+}
+
 /* Spinner */
 @keyframes spin {
   to {

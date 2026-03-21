@@ -3,17 +3,21 @@
 import { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { Bookmark } from "@/types/bookmark";
+import { Project } from "@/types/project";
+import ProjectDropdown from "./ProjectDropdown";
 
 interface BookmarkModalProps {
   initialUrl?: string;
   bookmark?: Bookmark;
   existingBookmarks?: Bookmark[];
+  projects?: Project[];
   onSave: (data: {
     url: string;
     title: string;
     description: string;
     thumbnail: string;
     favicon: string;
+    projectIds: string[];
   }) => void;
   onClose: () => void;
 }
@@ -26,6 +30,7 @@ export default function BookmarkModal({
   initialUrl,
   bookmark,
   existingBookmarks = [],
+  projects = [],
   onSave,
   onClose,
 }: BookmarkModalProps) {
@@ -36,6 +41,9 @@ export default function BookmarkModal({
   );
   const [thumbnail, setThumbnail] = useState(bookmark?.thumbnail || "");
   const [favicon, setFavicon] = useState(bookmark?.favicon || "");
+  const [projectIds, setProjectIds] = useState<string[]>(
+    bookmark?.projectIds || []
+  );
   const [fetching, setFetching] = useState(false);
   const [errors, setErrors] = useState<{ url?: string; title?: string }>({});
   const urlInputRef = useRef<HTMLInputElement>(null);
@@ -115,6 +123,7 @@ export default function BookmarkModal({
       description: description.trim(),
       thumbnail,
       favicon,
+      projectIds,
     });
   }
 
@@ -307,7 +316,7 @@ export default function BookmarkModal({
         </div>
 
         {/* Description */}
-        <div style={{ marginBottom: 24, position: "relative" }}>
+        <div style={{ marginBottom: 16, position: "relative" }}>
           <textarea
             value={description}
             onChange={(e) => {
@@ -332,6 +341,24 @@ export default function BookmarkModal({
           >
             {description.length} / 300
           </span>
+        </div>
+
+        {/* Add to project */}
+        <div style={{ marginBottom: 24 }}>
+          <div
+            style={{
+              fontSize: "var(--text-body-sm)",
+              color: "var(--color-text-secondary)",
+              marginBottom: 8,
+            }}
+          >
+            Add to project
+          </div>
+          <ProjectDropdown
+            projects={projects}
+            selectedIds={projectIds}
+            onChange={setProjectIds}
+          />
         </div>
 
         {/* Buttons */}

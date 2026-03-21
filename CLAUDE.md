@@ -14,14 +14,18 @@ app/
   globals.css             ← All CSS variables (colours, type scale, animations)
   ToastProvider.tsx        ← Global toast context
   login/page.tsx          ← Google sign-in page
-  home/page.tsx           ← Main bookmark feed with search, masonry grid
-  profile/page.tsx        ← User profile, sign out, delete account
+  home/page.tsx           ← Main bookmark feed with search, masonry grid, project filters
+  profile/page.tsx        ← User profile, projects list, settings, sign out, delete account
   api/meta/route.ts       ← Server-side URL metadata fetcher
+  projects/[id]/page.tsx  ← Project detail page with filtered bookmarks
 components/
-  BookmarkCard.tsx        ← Card with thumbnail, favicon, title, description, delete
-  BookmarkModal.tsx       ← Add/edit bookmark modal with metadata auto-fetch
+  BookmarkCard.tsx        ← Card with thumbnail, favicon, title, description, project badge, delete
+  BookmarkModal.tsx       ← Add/edit bookmark modal with metadata auto-fetch + project selection
   MasonryGrid.tsx         ← CSS column-count masonry layout
-  BottomNav.tsx           ← Floating pill nav bar (home, add, profile)
+  BottomNav.tsx           ← Floating pill nav bar (home, add, profile) + CreateMenu
+  CreateMenu.tsx          ← Floating action menu for creating bookmarks or projects
+  ProjectModal.tsx        ← Add/edit project modal
+  ProjectDropdown.tsx     ← Multi-select dropdown for assigning bookmarks to projects
   SearchBar.tsx           ← Fixed top search with real-time filtering
   Toast.tsx               ← Stacking toast notifications
   LoadingSkeleton.tsx     ← Shimmer placeholder cards
@@ -29,16 +33,24 @@ components/
 lib/
   firebase.ts             ← Firebase app/auth/db initialisation
   auth.ts                 ← signInWithGoogle, signOutUser, onAuthChange
-  bookmarks.ts            ← Firestore CRUD for /users/{uid}/bookmarks/
+  bookmarks.ts            ← Firestore CRUD for bookmarks + projects
 hooks/
   useAuth.ts              ← Auth state hook
   useBookmarks.ts         ← Real-time bookmark subscription hook
+  useProjects.ts          ← Real-time project subscription hook
   useToast.ts             ← Toast queue state management
   useClipboard.ts         ← Global Cmd+V/Ctrl+V URL detection
 types/
-  bookmark.ts             ← Bookmark interface
-firestore.rules           ← Per-user security rules
+  bookmark.ts             ← Bookmark interface (includes projectIds)
+  project.ts              ← Project interface
+firestore.rules           ← Per-user security rules (bookmarks, profile, projects)
 ```
+
+## Data Model
+- **Bookmark**: id, url, title, description, thumbnail, favicon, projectIds (string[]), createdAt
+- **Project**: id, name, description, createdAt
+- Bookmarks can belong to multiple projects via the `projectIds` array
+- Firestore paths: `/users/{uid}/bookmarks/`, `/users/{uid}/projects/`, `/users/{uid}/profile/`
 
 ## Design System
 

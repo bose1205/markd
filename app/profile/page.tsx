@@ -2,9 +2,10 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, FolderOpen, Pencil, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useBookmarks } from "@/hooks/useBookmarks";
+import { useProjects } from "@/hooks/useProjects";
 import { useToastContext } from "@/app/ToastProvider";
 import { signOutUser } from "@/lib/auth";
 import { auth, db } from "@/lib/firebase";
@@ -17,7 +18,13 @@ import {
   collection,
   writeBatch,
 } from "firebase/firestore";
+import {
+  deleteProject,
+  updateBookmark,
+} from "@/lib/bookmarks";
 import BottomNav from "@/components/BottomNav";
+import ProjectModal from "@/components/ProjectModal";
+import { Project } from "@/types/project";
 
 // ─── Confirmation Modal ─────────────────────────────────────
 function ConfirmModal({
@@ -249,6 +256,7 @@ function SectionLabel({ children }: { children: string }) {
 export default function ProfilePage() {
   const { user, loading } = useAuth();
   const { bookmarks } = useBookmarks(user?.uid);
+  const { projects } = useProjects(user?.uid);
   const { showToast } = useToastContext();
   const router = useRouter();
 
@@ -263,6 +271,10 @@ export default function ProfilePage() {
   const [modal, setModal] = useState<
     "sign-out" | "delete-account" | "clear-bookmarks" | null
   >(null);
+  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(
+    null
+  );
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
 
   // Load about text + notification preference
   useEffect(() => {
@@ -349,6 +361,40 @@ export default function ProfilePage() {
       showToast("All bookmarks deleted");
     } catch {
       showToast("Failed to clear bookmarks", "error");
+    }
+  }
+
+  async function handleDeleteProject(projectId: string) {
+    if (!user) return;
+    try {
+      // Remove projectId from all bookmarks that reference it
+      const affectedBookmarks = bookmarks.filter(
+        (b) => b.projectIds && b.projectIds.includes(projectId)
+      );
+      for (const b of affectedBookmarks) {
+        await updateBookmark(user.uid, b.id, {
+          projectIds: b.projectIds.filter((id) => id !== projectId),
+        });
+      }
+      await deleteProject(user.uid, projectId);
+      showToast("Project deleted");
+    } catch {
+      showToast("Failed to delete project", "error");
+    }
+    setDeletingProjectId(null);
+  }
+
+  async function handleEditProjectSave(
+    data: Omit<Project, "id" | "createdAt">
+  ) {
+    if (!user || !editingProject) return;
+    try {
+      const { updateProject } = await import("@/lib/bookmarks");
+      await updateProject(user.uid, editingProject.id, data);
+      showToast("Project updated");
+      setEditingProject(null);
+    } catch {
+      showToast("Something went wrong", "error");
     }
   }
 
@@ -628,6 +674,48 @@ export default function ProfilePage() {
           </div>
         )}
 
+        {/* ── Projects Section ── */}
+        <div style={{ marginTop: 32 }}>
+          <SectionLabel>Projects</SectionLabel>
+          {projects.length === 0 ? (
+            <div style={{ padding: "8px 0" }}>
+              <div
+                style={{
+                  fontSize: "var(--text-body-sm)",
+                  color: "var(--color-text-tertiary)",
+                }}
+              >
+                No projects yet
+              </div>
+              <div
+                style={{
+                  fontSize: "var(--text-caption)",
+                  color: "var(--color-text-tertiary)",
+                  marginTop: 4,
+                }}
+              >
+                Create one using the + button
+              </div>
+            </div>
+          ) : (
+            projects.map((project) => {
+              const count = bookmarks.filter(
+                (b) => b.projectIds && b.projectIds.includes(project.id)
+              ).length;
+              return (
+                <ProjectRow
+                  key={project.id}
+                  project={project}
+                  bookmarkCount={count}
+                  onClick={() => router.push(`/projects/${project.id}`)}
+                  onEdit={() => setEditingProject(project)}
+                  onDelete={() => setDeletingProjectId(project.id)}
+                />
+              );
+            })
+          )}
+        </div>
+
         {/* ── Settings: ACCOUNT ── */}
         <div style={{ marginTop: 32 }}>
           <SectionLabel>Account</SectionLabel>
@@ -735,6 +823,118 @@ export default function ProfilePage() {
           onClose={() => setModal(null)}
         />
       )}
+
+      {deletingProjectId && (
+        <ConfirmModal
+          title="Delete project?"
+          message="Your bookmarks won't be deleted, only removed from this project."
+          confirmLabel="Delete"
+          onConfirm={() => handleDeleteProject(deletingProjectId)}
+          onClose={() => setDeletingProjectId(null)}
+        />
+      )}
+
+      {editingProject && (
+        <ProjectModal
+          project={editingProject}
+          onSave={handleEditProjectSave}
+          onClose={() => setEditingProject(null)}
+        />
+      )}
     </>
+  );
+}
+
+// ─── Project Row ────────────────────────────────────────────
+function ProjectRow({
+  project,
+  bookmarkCount,
+  onClick,
+  onEdit,
+  onDelete,
+}: {
+  project: Project;
+  bookmarkCount: number;
+  onClick: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        padding: "12px 8px",
+        borderBottom: "1px solid var(--color-border)",
+        cursor: "pointer",
+        background: hovered ? "var(--color-surface-hover)" : "transparent",
+        transition: "background 0.15s",
+        borderRadius: 12,
+        gap: 12,
+      }}
+    >
+      <FolderOpen
+        size={16}
+        style={{ color: "var(--color-text-tertiary)", flexShrink: 0 }}
+      />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div
+          style={{
+            fontSize: "var(--text-body-lg)",
+            color: "var(--color-text-primary)",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {project.name}
+        </div>
+        <div
+          style={{
+            fontSize: "var(--text-caption)",
+            color: "var(--color-text-tertiary)",
+            marginTop: 2,
+          }}
+        >
+          {bookmarkCount} bookmark{bookmarkCount !== 1 ? "s" : ""}
+        </div>
+      </div>
+      <div
+        style={{ display: "flex", gap: 8, flexShrink: 0 }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onEdit}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            padding: 4,
+            display: "flex",
+            color: "var(--color-text-tertiary)",
+          }}
+        >
+          <Pencil size={16} />
+        </button>
+        <button
+          onClick={onDelete}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            padding: 4,
+            display: "flex",
+            color: "var(--color-text-tertiary)",
+          }}
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
+    </div>
   );
 }

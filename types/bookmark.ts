@@ -5,5 +5,6 @@ export interface Bookmark {
   description: string;
   thumbnail: string;
   favicon: string;
+  projectIds: string[];
   createdAt: number;
 }
