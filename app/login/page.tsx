@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { signInWithGoogle, getRedirectResult } from "@/lib/auth";
 import { auth } from "@/lib/firebase";
@@ -32,38 +32,23 @@ function GoogleIcon() {
 export default function LoginPage() {
   const { user, loading } = useAuth();
   const { showToast } = useToastContext();
-  const [checkingRedirect, setCheckingRedirect] = useState(true);
-  const hasRedirected = useRef(false);
 
-  // Handle redirect result from mobile sign-in
+  // Process redirect result errors from mobile sign-in
   useEffect(() => {
-    getRedirectResult(auth)
-      .then((result) => {
-        if (result?.user && !hasRedirected.current) {
-          hasRedirected.current = true;
-          window.location.href = "/home";
-        }
-      })
-      .catch((error) => {
-        showToast(error.message || "Sign in failed", "error");
-      })
-      .finally(() => {
-        setCheckingRedirect(false);
-      });
+    getRedirectResult(auth).catch((error) => {
+      showToast(error.message || "Sign in failed", "error");
+    });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Redirect if user is already authenticated (covers both
-  // onAuthStateChanged picking up the redirect user, and
-  // users who are already logged in visiting /login)
+  // Redirect when user is authenticated
   useEffect(() => {
-    if (!loading && user && !hasRedirected.current) {
-      hasRedirected.current = true;
+    if (!loading && user) {
       window.location.href = "/home";
     }
   }, [user, loading]);
 
-  if (loading || checkingRedirect) {
+  if (loading || user) {
     return (
       <div
         style={{
