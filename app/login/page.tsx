@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { signInWithGoogle, getRedirectResult } from "@/lib/auth";
@@ -34,27 +34,38 @@ export default function LoginPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const { showToast } = useToastContext();
+  const [checkingRedirect, setCheckingRedirect] = useState(true);
+  const hasRedirected = useRef(false);
 
-  useEffect(() => {
-    if (!loading && user) {
-      router.replace("/home");
-    }
-  }, [user, loading, router]);
-
+  // Handle redirect result from mobile sign-in
   useEffect(() => {
     getRedirectResult(auth)
       .then((result) => {
-        if (result?.user) {
-          router.replace("/home");
+        if (result?.user && !hasRedirected.current) {
+          hasRedirected.current = true;
+          window.location.href = "/home";
         }
       })
       .catch((error) => {
         showToast(error.message || "Sign in failed", "error");
+      })
+      .finally(() => {
+        setCheckingRedirect(false);
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (loading) {
+  // Redirect if user is already authenticated (covers both
+  // onAuthStateChanged picking up the redirect user, and
+  // users who are already logged in visiting /login)
+  useEffect(() => {
+    if (!loading && user && !hasRedirected.current) {
+      hasRedirected.current = true;
+      window.location.href = "/home";
+    }
+  }, [user, loading]);
+
+  if (loading || checkingRedirect) {
     return (
       <div
         style={{
