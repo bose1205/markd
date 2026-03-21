@@ -188,6 +188,10 @@ export default function BookmarkModal({
             }}
             onPaste={(e) => {
               const pasted = e.clipboardData.getData("text/plain").trim();
+              if (pasted) {
+                setUrl(pasted);
+                setErrors((prev) => ({ ...prev, url: undefined }));
+              }
               setTimeout(() => {
                 if (isValidUrl(pasted) && !bookmark) fetchMeta(pasted);
               }, 0);
