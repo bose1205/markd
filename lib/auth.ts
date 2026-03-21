@@ -1,10 +1,6 @@
 import {
   GoogleAuthProvider,
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
-  browserLocalPersistence,
-  setPersistence,
   signOut,
   onAuthStateChanged,
   User,
@@ -12,17 +8,12 @@ import {
 import { auth } from "./firebase";
 
 const googleProvider = new GoogleAuthProvider();
+googleProvider.addScope("email");
+googleProvider.addScope("profile");
 
 export async function signInWithGoogle() {
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  if (isMobile) {
-    await setPersistence(auth, browserLocalPersistence);
-    return signInWithRedirect(auth, googleProvider);
-  }
   return signInWithPopup(auth, googleProvider);
 }
-
-export { getRedirectResult };
 
 export async function signOutUser() {
   return signOut(auth);
