@@ -7,6 +7,7 @@ import { Bookmark } from "@/types/bookmark";
 interface BookmarkModalProps {
   initialUrl?: string;
   bookmark?: Bookmark;
+  existingBookmarks?: Bookmark[];
   onSave: (data: {
     url: string;
     title: string;
@@ -17,9 +18,14 @@ interface BookmarkModalProps {
   onClose: () => void;
 }
 
+function normalizeUrl(u: string): string {
+  return u.trim().toLowerCase().replace(/\/+$/, "");
+}
+
 export default function BookmarkModal({
   initialUrl,
   bookmark,
+  existingBookmarks = [],
   onSave,
   onClose,
 }: BookmarkModalProps) {
@@ -88,6 +94,13 @@ export default function BookmarkModal({
       newErrors.url = "URL is required";
     } else if (!isValidUrl(url.trim())) {
       newErrors.url = "Please enter a valid URL";
+    } else if (
+      !bookmark &&
+      existingBookmarks.some(
+        (b) => normalizeUrl(b.url) === normalizeUrl(url)
+      )
+    ) {
+      newErrors.url = "You've already saved this link";
     }
     if (!title.trim()) {
       newErrors.title = "Title is required";

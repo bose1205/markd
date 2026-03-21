@@ -207,6 +207,7 @@ export default function HomePage() {
         <BookmarkModal
           initialUrl={modalUrl}
           bookmark={editingBookmark}
+          existingBookmarks={bookmarks}
           onSave={handleSave}
           onClose={() => {
             setModalOpen(false);
