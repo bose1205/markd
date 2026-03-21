@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Home, Plus } from "lucide-react";
@@ -8,6 +8,7 @@ import { User } from "firebase/auth";
 import { useAuth } from "@/hooks/useAuth";
 import { useBookmarks } from "@/hooks/useBookmarks";
 import { useProjects } from "@/hooks/useProjects";
+import { useClipboard } from "@/hooks/useClipboard";
 import { useToastContext } from "@/app/ToastProvider";
 import { addBookmark, addProject } from "@/lib/bookmarks";
 import { Project } from "@/types/project";
@@ -38,7 +39,19 @@ export default function BottomNav({ user }: BottomNavProps) {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [bookmarkModalOpen, setBookmarkModalOpen] = useState(false);
+  const [bookmarkModalUrl, setBookmarkModalUrl] = useState<string | undefined>();
   const [projectModalOpen, setProjectModalOpen] = useState(false);
+
+  const handleUrlDetected = useCallback(
+    (url: string) => {
+      if (bookmarkModalOpen || projectModalOpen) return;
+      setBookmarkModalUrl(url);
+      setBookmarkModalOpen(true);
+    },
+    [bookmarkModalOpen, projectModalOpen]
+  );
+
+  useClipboard(handleUrlDetected);
 
   async function handleSaveBookmark(data: {
     url: string;
@@ -125,7 +138,10 @@ export default function BottomNav({ user }: BottomNavProps) {
           <CreateMenu
             open={menuOpen}
             onClose={() => setMenuOpen(false)}
-            onBookmark={() => setBookmarkModalOpen(true)}
+            onBookmark={() => {
+              setBookmarkModalUrl(undefined);
+              setBookmarkModalOpen(true);
+            }}
             onProject={() => setProjectModalOpen(true)}
           />
         </div>
@@ -184,10 +200,14 @@ export default function BottomNav({ user }: BottomNavProps) {
 
       {bookmarkModalOpen && (
         <BookmarkModal
+          initialUrl={bookmarkModalUrl}
           existingBookmarks={bookmarks}
           projects={projects}
           onSave={handleSaveBookmark}
-          onClose={() => setBookmarkModalOpen(false)}
+          onClose={() => {
+            setBookmarkModalOpen(false);
+            setBookmarkModalUrl(undefined);
+          }}
         />
       )}
 
