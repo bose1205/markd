@@ -2,8 +2,7 @@
 
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { signInWithGoogle, getRedirectResult } from "@/lib/auth";
-import { auth } from "@/lib/firebase";
+import { signInWithGoogle } from "@/lib/auth";
 import { useToastContext } from "@/app/ToastProvider";
 
 function GoogleIcon() {
@@ -33,15 +32,7 @@ export default function LoginPage() {
   const { user, loading } = useAuth();
   const { showToast } = useToastContext();
 
-  // Process redirect result errors from mobile sign-in
-  useEffect(() => {
-    getRedirectResult(auth).catch((error) => {
-      showToast(error.message || "Sign in failed", "error");
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Redirect when user is authenticated
+  // Redirect when user is already authenticated
   useEffect(() => {
     if (!loading && user) {
       window.location.href = "/home";

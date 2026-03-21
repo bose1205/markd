@@ -3,6 +3,8 @@ import {
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
+  browserLocalPersistence,
+  setPersistence,
   signOut,
   onAuthStateChanged,
   User,
@@ -14,6 +16,7 @@ const googleProvider = new GoogleAuthProvider();
 export async function signInWithGoogle() {
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   if (isMobile) {
+    await setPersistence(auth, browserLocalPersistence);
     return signInWithRedirect(auth, googleProvider);
   }
   return signInWithPopup(auth, googleProvider);
